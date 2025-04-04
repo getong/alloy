@@ -3,14 +3,14 @@ use crate::{
         kzg_to_versioned_hash, Blob, BlobAndProofV2, BlobTransactionSidecar, Bytes48,
         BYTES_PER_BLOB, BYTES_PER_COMMITMENT, BYTES_PER_PROOF,
     },
-    eip7594::EIP_7594_WRAPPER_VERSION,
+    eip7594::{CELLS_PER_EXT_BLOB, EIP_7594_WRAPPER_VERSION},
 };
 use alloc::vec::Vec;
 use alloy_primitives::B256;
 use alloy_rlp::{Buf, BufMut, Decodable, Encodable, Header};
 
 #[cfg(feature = "kzg")]
-use crate::{eip4844::BlobTransactionValidationError, eip7594::CELLS_PER_EXT_BLOB};
+use crate::eip4844::BlobTransactionValidationError;
 
 /// This represents a set of blobs, and its corresponding commitments and proofs.
 /// Proof type depends on the sidecar variant.
