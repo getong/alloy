@@ -5,7 +5,7 @@ use crate::{
     },
     eip7594::{CELLS_PER_EXT_BLOB, EIP_7594_WRAPPER_VERSION},
 };
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use alloy_primitives::B256;
 use alloy_rlp::{Buf, BufMut, Decodable, Encodable, Header};
 
