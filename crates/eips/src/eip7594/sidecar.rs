@@ -51,10 +51,10 @@ impl BlobTransactionSidecarVariant {
     }
 
     /// Returns an iterator over the versioned hashes of the commitments.
-    pub fn versioned_hashes(&self) -> impl Iterator<Item = B256> + '_ {
+    pub fn versioned_hashes(&self) -> Vec<B256> {
         match self {
-            Self::Eip4844(sidecar) => sidecar.versioned_hashes(),
-            Self::Eip7594(sidecar) => sidecar.versioned_hashes(),
+            Self::Eip4844(sidecar) => sidecar.versioned_hashes().collect(),
+            Self::Eip7594(sidecar) => sidecar.versioned_hashes().collect(),
         }
     }
 
