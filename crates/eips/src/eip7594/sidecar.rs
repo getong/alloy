@@ -1,7 +1,7 @@
 use crate::{
     eip4844::{
-        kzg_to_versioned_hash, Blob, BlobTransactionSidecar, Bytes48, BYTES_PER_BLOB,
-        BYTES_PER_COMMITMENT, BYTES_PER_PROOF,
+        kzg_to_versioned_hash, Blob, BlobAndProofV2, BlobTransactionSidecar, Bytes48,
+        BYTES_PER_BLOB, BYTES_PER_COMMITMENT, BYTES_PER_PROOF,
     },
     eip7594::EIP_7594_WRAPPER_VERSION,
 };
@@ -271,6 +271,34 @@ impl BlobTransactionSidecarEip7594 {
     /// Returns an iterator over the versioned hashes of the commitments.
     pub fn versioned_hashes(&self) -> impl Iterator<Item = B256> + '_ {
         self.commitments.iter().map(|c| kzg_to_versioned_hash(c.as_slice()))
+    }
+
+    /// Matches versioned hashes and returns an iterator of (index, [`BlobAndProofV2`]) pairs
+    /// where index is the position in `versioned_hashes` that matched the versioned hash in the
+    /// sidecar.
+    ///
+    /// This is used for the `engine_getBlobsV2` RPC endpoint of the engine API
+    pub fn match_versioned_hashes<'a>(
+        &'a self,
+        versioned_hashes: &'a [B256],
+    ) -> impl Iterator<Item = (usize, BlobAndProofV2)> + 'a {
+        self.versioned_hashes().enumerate().flat_map(move |(i, blob_versioned_hash)| {
+            versioned_hashes.iter().enumerate().filter_map(move |(j, target_hash)| {
+                if blob_versioned_hash == *target_hash {
+                    let maybe_blob = self.blobs.get(i);
+                    let proof_range = i * CELLS_PER_EXT_BLOB..(i + 1) * CELLS_PER_EXT_BLOB;
+                    let maybe_proofs = Some(&self.cell_proofs[proof_range])
+                        .filter(|proofs| proofs.len() == CELLS_PER_EXT_BLOB);
+                    if let Some((blob, proofs)) = maybe_blob.copied().zip(maybe_proofs) {
+                        return Some((
+                            j,
+                            BlobAndProofV2 { blob: Box::new(blob), proofs: proofs.to_vec() },
+                        ));
+                    }
+                }
+                None
+            })
+        })
     }
 
     /// Outputs the RLP length of [BlobTransactionSidecarEip7594] fields without a RLP header.
